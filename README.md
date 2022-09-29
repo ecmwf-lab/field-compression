@@ -1,8 +1,8 @@
 # Field Compression Laboratory <!-- no toc -->
 
-[![CI]]
-[![Docs]]
-[![Formatted with black]]
+[![CI](https://github.com/ecmwf-lab/field-compression/actions/workflows/ci.yml/badge.svg)](https://github.com/ecmwf-lab/field-compression/actions/workflows/ci.yml)
+[![Available on pypi](https://img.shields.io/badge/Docs-https%3A%2F%2Fecmwf--lab.github.io%2Ffield--compression%2F-blue.svg)](https://ecmwf-lab.github.io/field-compression/)
+[![Formatted with black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 
 ## Contents  <!-- no toc -->
 - [Overview](#overview)
