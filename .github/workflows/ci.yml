@@ -1,0 +1,45 @@
+name: CI
+
+on: [push, pull_request, workflow_dispatch]
+
+permissions: read-all
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: conda-incubator/setup-miniconda@v2
+
+    - name: Setup environment
+      shell: bash -l {0}
+      run: ./scripts/conda_init.sh
+    
+    - name: Build docs
+      shell: bash -l {0}
+      run: ./scripts/develop/make_docs.sh
+    
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v1
+      with:
+        path: docs/_build
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    runs-on: ubuntu-latest
+    
+    needs: build
+
+    permissions:
+      pages: write
+      id-token: write
+    
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1

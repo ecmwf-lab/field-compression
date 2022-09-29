@@ -1,0 +1,39 @@
+name: fcpy
+channels:
+- conda-forge
+dependencies:
+- python=3.10
+- julia=1.8
+- numpy
+- scipy
+- xarray
+- dask
+- matplotlib
+- metview
+- metview-python
+- jupyter
+- nbconvert
+- ipywidgets
+- sphinx
+- sphinx-autobuild
+- sphinx-book-theme
+- sphinx-copybutton
+- sphinxcontrib-bibtex
+- myst-parser
+- nbsphinx
+- nbstripout
+- tabulate
+- flake8
+- isort
+- autoflake
+- black-jupyter
+- pip
+- cartopy
+- pip:
+  - julia # PyJulia
+  - fast-histogram
+  - jupyter-repo2docker
+  - git+https://github.com/dmey/cfgrib.git@float64
+  - git+https://github.com/ecmwf/climetlab.git@236649120684729790d7db1d201103ba1db60ef7
+  - git+https://github.com/ecmwf-lab/climetlab-fields-compression.git@dmey/release-0.1.0
+  - -e .
