@@ -9,7 +9,7 @@ with open(os.path.join(this_dir, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="fcpy",
-    version="0.1.0",
+    version="0.2.0",
     description="ECMWF Field Compression Laboratory",
     long_description=long_description,
     long_description_content_type="text/markdown",

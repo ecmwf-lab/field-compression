@@ -22,9 +22,6 @@
 
 The Field Compression Laboratory aims to evaluate the impact of lossy compression on the accuracy of meteorological quantities used in numerical weather prediction. The current framework includes a Python library (fcpy) and example notebooks. Currently, we support latitude/longitude and Gaussian gridded data in netCDF and GRIB formats.
 
-***NOTE: fcpy is in alpha stage and being heavily refactored in several areas. Packaging, distribution, execution speed, and visual appearance are being reworked and will be finalised at a later stage. The current notebooks are not final and will help understand user needs iteratively.***
-
-
 ## Prerequisites
 - Linux or macOS
 - [Anaconda/Miniconda](https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links)
