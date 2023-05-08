@@ -67,7 +67,7 @@ shutil.copytree(PROJ_DIR / "samples", PROJ_DIR / "docs" / "samples", dirs_exist_
 project = "fcpy"
 copyright = "2022 ECMWF"
 author = "ECMWF"
-release = "0.1.0"
+release = "0.2.0"
 
 html_context = {
     "display_github": True,
