@@ -160,6 +160,9 @@ docs/license.md
 docs/develop.md
 docs/contributing.md
 docs/data/
+docs/samples/
+
+/*.csv
 
 # Artefacts
 fcpy-docker.tar.gz
@@ -170,3 +173,5 @@ data/*
 # note that branch will be squashed so no issues
 # with current repo size.
 !data/sample_ml_q.grib.xz
+
+report/workspace

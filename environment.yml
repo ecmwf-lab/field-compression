@@ -26,11 +26,17 @@ dependencies:
 - flake8
 - isort
 - autoflake
+- black
 - black-jupyter
 - pip
 - cartopy
+- scikit-learn
+- scikit-image
+- kneed
+- seaborn
 - pip:
   - julia # PyJulia
+  - pyjson5
   - fast-histogram
   - jupyter-repo2docker
   - git+https://github.com/dmey/cfgrib.git@float64

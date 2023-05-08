@@ -3,6 +3,8 @@ import shutil
 import sys
 from pathlib import Path
 
+os.environ["SPHINX_BUILD"] = "1"
+
 PROJ_DIR = Path.cwd().parent
 sys.path.insert(0, str(PROJ_DIR.resolve()))
 
@@ -55,8 +57,12 @@ shutil.copytree(
     PROJ_DIR / "notebooks", PROJ_DIR / "docs" / "_notebooks", dirs_exist_ok=True
 )
 
-# Copy sample data folder
+# Copy data folder
 shutil.copytree(PROJ_DIR / "data", PROJ_DIR / "docs" / "data", dirs_exist_ok=True)
+
+# Copy samples
+shutil.copytree(PROJ_DIR / "samples", PROJ_DIR / "docs" / "samples", dirs_exist_ok=True)
+
 
 project = "fcpy"
 copyright = "2022 ECMWF"

@@ -1,0 +1,31 @@
+{
+    "mars": {
+        "anoffset": 9,
+        "class": "rd",
+        "dataset": "research",
+        "date": "2020-07-21",
+        "expver": "hplp",
+        "levtype": "ml",
+        "levelist": [
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "10"
+        ],
+        "param": [
+            "133"
+        ],
+        "step": [
+            0
+        ],
+        "stream": "lwda",
+        "time": "00:00:00",
+        "type": "fc"
+    }
+}

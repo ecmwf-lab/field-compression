@@ -22,5 +22,10 @@ setup(
         "Programming Language :: Python :: 3",
     ],
     packages=find_packages(),
+    entry_points={
+        "console_scripts": [
+            "fcpy = fcpy.cli:main",
+        ]
+    },
     python_requires=">=3.8",
 )

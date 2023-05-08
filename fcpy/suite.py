@@ -12,7 +12,7 @@ import warnings
 from collections import defaultdict
 from collections.abc import Iterator
 from time import time
-from typing import Callable, Dict, Optional, Tuple, Type
+from typing import Callable, Dict, Optional, Tuple, Type, Union
 
 import cartopy.crs as ccrs
 import fast_histogram
@@ -609,7 +609,7 @@ class Suite:
         compressors: list[Compressor],
         metrics: list[Type[Metric]],
         custom_metrics: Optional[list[Callable]] = None,
-        bits: Optional[list[int]] = None,
+        bits: Optional[Union[dict, list[int]]] = None,
         max_chunk_size_bytes: Optional[int] = None,
         skip_histograms=False,
     ):
@@ -621,8 +621,12 @@ class Suite:
                 bits_ = compute_required_bit_space(ds[var_name], field_chunk_fn)
                 bits_per_var[var_name] = bits_
                 print(f"{var_name}: bits not given, computed as {bits_}")
-        else:
+        elif isinstance(bits, list):
             bits_per_var = {var_name: bits for var_name in ds}
+        elif isinstance(bits, dict):
+            bits_per_var = bits
+        else:
+            raise ValueError("bits must be a list or dict")
 
         self.ds = ds
         self.baseline = baseline
@@ -880,32 +884,42 @@ def spatialplot(
     da_decompressed = run_compressor_single(da_sel, compressor, compressor.bits)
 
     da = metric().compute(da_baseline, da_decompressed)
+    da.attrs = {
+        "long_name": da_sel.attrs["long_name"],
+        "units": da_sel.attrs["units"],
+    }
 
     if third_dim not in da.dims:
         third_dim = None
 
-    if is_gridded:
-        regridded = da
-    else:
-        out = []
-        path_to_template = ds.attrs.get("path")
-        if path_to_template is None:
-            raise RuntimeError(
-                "Cannot regrid, 'path' attribute missing in xarray Dataset"
-            )
-        if third_dim:
-            for third_dim_val in list(da[third_dim].values):
-                regridded = regrid(
-                    source=da.sel({third_dim: third_dim_val}),
-                    path_to_template=path_to_template,
-                )
-                regridded = regridded.assign_coords({third_dim: [third_dim_val]})
-                out.append(regridded)
+    das = [da, da_baseline, da_decompressed]
+    das_regridded = []
+    for da_ in das:
+        if is_gridded:
+            das_regridded.append(da_)
         else:
-            regridded = regrid(source=da, path_to_template=path_to_template)
-            out.append(regridded)
-        regridded = xr.merge(out)[var_name]
-        standard_names = get_standard_name_dims(regridded)
+            out = []
+            path_to_template = ds.attrs.get("path")
+            if path_to_template is None:
+                raise RuntimeError(
+                    "Cannot regrid, 'path' attribute missing in xarray Dataset"
+                )
+            if third_dim:
+                for third_dim_val in list(da_[third_dim].values):
+                    regridded = regrid(
+                        source=da_.sel({third_dim: third_dim_val}),
+                        path_to_template=path_to_template,
+                    )
+                    regridded = regridded.assign_coords({third_dim: [third_dim_val]})
+                    out.append(regridded)
+            else:
+                regridded = regrid(source=da_, path_to_template=path_to_template)
+                out.append(regridded)
+            regridded = xr.merge(out)[var_name]
+            das_regridded.append(regridded)
+            standard_names = get_standard_name_dims(regridded)
+
+    da, da_baseline, da_decompressed = das_regridded
 
     plot_spatial_single(
         da_baseline.sel({third_dim: plot_sel[third_dim]}),
@@ -920,7 +934,7 @@ def spatialplot(
         metric="Decompressed",
     )
     plot_spatial_single(
-        regridded.sel({third_dim: plot_sel[third_dim]}),
+        da.sel({third_dim: plot_sel[third_dim]}),
         ds,
         var_name,
         metric=metric.name,
@@ -931,21 +945,21 @@ def spatialplot(
             nrows=1, ncols=3, figsize=(25, 5), width_ratios=[2, 2, 1]
         )
         # First column: lat/third dim slice
-        im = regridded.sel(
-            {standard_names["longitude"]: longitude}, method="nearest"
-        ).plot(ax=ax[0], add_colorbar=False)
+        im = da.sel({standard_names["longitude"]: longitude}, method="nearest").plot(
+            ax=ax[0], add_colorbar=False
+        )
         plt.colorbar(im, ax=ax[0]).set_label(
             label=f"{ds[var_name].long_name} {metric.name} in {ds[var_name].units}"
         )
         # Second column: lon/third dim slice
-        im = regridded.sel(
-            {standard_names["latitude"]: latitude}, method="nearest"
-        ).plot(ax=ax[1], add_colorbar=False)
+        im = da.sel({standard_names["latitude"]: latitude}, method="nearest").plot(
+            ax=ax[1], add_colorbar=False
+        )
         plt.colorbar(im, ax=ax[1]).set_label(
             label=f"{ds[var_name].long_name} {metric.name} in {ds[var_name].units}"
         )
         # Third column: third dim profile
-        im = regridded.sel(
+        im = da.sel(
             {
                 standard_names["longitude"]: longitude,
                 standard_names["latitude"]: latitude,
