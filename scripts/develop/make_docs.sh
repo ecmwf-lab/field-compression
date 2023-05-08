@@ -15,7 +15,5 @@ fi
 eval "$(conda shell.bash hook)"
 conda activate fcpy
 
-# TODO: fix metview in this env...
 # set SKIP_NB=1 to skip generating notebooks
-# METVIEW_PYTHON_ONLY=1
 sphinx-build -v -b html docs/ docs/_build/

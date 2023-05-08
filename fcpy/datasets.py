@@ -8,7 +8,6 @@
 #
 
 import glob
-from typing import Optional
 
 import climetlab as cml
 import xarray as xr
@@ -362,72 +361,29 @@ def flatten(lst):
     return [item for sublist in lst for item in sublist]
 
 
-def load_dataset(
-    model: str,
-    var_names: Optional[list] = None,
-    levels: Optional[list] = None,
-    steps: Optional[list] = None,
-) -> xr.Dataset:
-    """Load one of the pre-defined datasets via MARS.
+def fetch_mars_dataset(request: dict, skip_xarray=False) -> xr.Dataset:
+    """Load a dataset via MARS.
 
     Args:
-        model (str): The model to use, currently always "atmospheric-model".
-        var_names (list, optional): Names of variables to load. Defaults to all.
-        levels (list, optional): Levels to load. Defaults to all.
-        steps (list, optional): Time steps to load. Defaults to all.
+        request (dict): MARS request object.
 
     Returns:
         xr.Dataset: The loaded dataset.
     """
-
-    level_types = list(PARAMETERS[model].keys())
-
-    var_names_all = {
-        level_type: PARAMETERS[model][level_type]["param"] for level_type in level_types
-    }
-
-    var_names_all_flat = flatten(var_names_all.values())
-
-    assert len(set(var_names_all)) == len(var_names_all)
-
-    # Set defaults
-    if not var_names:
-        var_names = var_names_all_flat
-    elif not all(x in var_names_all_flat for x in var_names):
-        raise ValueError("Unknown variable")
-    assert var_names is not None
-    if not levels:
-        levels = [1, 2]
-    if not steps:
-        steps = [0]
-
-    datasets = []
-    paths = []
-    for level_type in level_types:
-        if not any(x in var_names_all[level_type] for x in var_names):
-            continue
-        if "levelist" not in PARAMETERS[model][level_type]:
-            levels_to_load = None
-        else:
-            levels_to_load = levels
-
-        tmp_var_names = list(
-            set(var_names_all[level_type]).intersection(set(var_names))
-        )
-        dataset = cml.load_dataset(
-            DATASET_ID,
-            model=model,
-            levtype=level_type,
-            param=tmp_var_names,
-            levels=levels_to_load,
-            step=steps,
-        )
-        paths.append(dataset[0].path)
-        datasets.append(dataset.to_xarray())
-
-    out = xr.merge(datasets)
+    dataset = cml.load_source("mars", request)
+    if skip_xarray:
+        return dataset
+    errors = []
+    for d in dataset:
+        grid_type = d.metadata("gridType")
+        if grid_type != "reduced_gg":
+            var_name = d.field_metadata()["shortName"]
+            errors.append(f"Grid type not supported: {grid_type} for {var_name}")
+    if errors:
+        raise ValueError(". ".join(errors))
+    out = dataset.to_xarray()
     # Store path for regridding, see utils.py.
-    out.attrs["path"] = paths[0]
+    out.attrs["path"] = dataset[0].path
     return out
 
 

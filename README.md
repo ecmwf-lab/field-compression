@@ -5,22 +5,22 @@
 [![Formatted with black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 
 ## Contents  <!-- no toc -->
-- [Overview](#overview)
-- [Prerequisites](#prerequisites)
-- [Set up](#set-up)
-- [How to use](#how-to-use)
-- [Example notebooks](#example-notebooks)
-- [How to contribute](#how-to-contribute)
-- [Development notes](#development-notes)
-- [Copyright and license](#copyright-and-license)
-- [References](#references)
+- [Field Compression Laboratory ](#field-compression-laboratory-)
+  - [Contents  ](#contents--)
+  - [Overview](#overview)
+  - [Prerequisites](#prerequisites)
+  - [Set up](#set-up)
+  - [How to use](#how-to-use)
+  - [Example notebooks](#example-notebooks)
+  - [Command-line interface](#command-line-interface)
+  - [How to contribute](#how-to-contribute)
+  - [Development notes](#development-notes)
+  - [Copyright and license](#copyright-and-license)
+  - [References](#references)
 
 ## Overview
 
 The Field Compression Laboratory aims to evaluate the impact of lossy compression on the accuracy of meteorological quantities used in numerical weather prediction. The current framework includes a Python library (fcpy) and example notebooks. Currently, we support latitude/longitude and Gaussian gridded data in netCDF and GRIB formats.
-
-***NOTE: fcpy is in alpha stage and being heavily refactored in several areas. Packaging, distribution, execution speed, and visual appearance are being reworked and will be finalised at a later stage. The current notebooks are not final and will help understand user needs iteratively.***
-
 
 ## Prerequisites
 - Linux or macOS
@@ -84,6 +84,59 @@ scripts/conda_run_notebooks.sh
 
 There you will see two example notebooks named `examples-interactive` and `examples-programmatic`. The former shows how to call interactive plots and the latter programmatically.
 
+
+## Command-line interface
+
+The fcpy command-line interface offers an easy way to determine the number of bits required per variable and dimensions in a CSV table.
+
+```sh
+fcpy --input data/cams_q_20191201_v3.nc --vars q --subset lev=0-10
+```
+
+This will create the following CSV output table:
+
+```
+var_name,lev,compressor,bits,sigmas
+q,1.0,Round,14.0,0.32247692346572876
+q,2.0,Round,14.0,0.4317324161529541
+q,3.0,Round,14.0,0.493638277053833
+q,4.0,Round,15.0,0.5703839063644409
+q,5.0,Round,15.0,0.6555898189544678
+q,6.0,Round,16.0,0.774020254611969
+q,7.0,Round,17.0,0.8185981512069702
+q,8.0,Round,18.0,0.8566567897796631
+q,9.0,Round,19.0,0.8976887464523315
+q,10.0,Round,17.0,0.9218334555625916
+q,1.0,LinQuantization,13.0,0.9965649843215942
+q,2.0,LinQuantization,13.0,0.9766294956207275
+q,3.0,LinQuantization,12.0,0.966712474822998
+q,4.0,LinQuantization,12.0,0.9503071904182434
+q,5.0,LinQuantization,12.0,0.9498687982559204
+q,6.0,LinQuantization,14.0,0.9693909883499146
+q,7.0,LinQuantization,15.0,0.9825363159179688
+q,8.0,LinQuantization,15.0,0.9840608239173889
+q,9.0,LinQuantization,16.0,1.0056097507476807
+q,10.0,LinQuantization,16.0,0.9886303544044495
+```
+
+For more info on how to use the tool, run `fcpy --help`:
+
+```
+usage: fcpy [-h] --input INPUT [--output OUTPUT] [--dtype {float32}] [--compressors COMPRESSORS [COMPRESSORS ...]] [--vars VARS [VARS ...]]
+            [--subset SUBSET [SUBSET ...]]
+
+options:
+  -h, --help            show this help message and exit
+  --input INPUT         Dataset (.nc or .grib) or MARS request file (.json)
+  --output OUTPUT       Output folder
+  --dtype {float32}     Convert data to different type
+  --compressors COMPRESSORS [COMPRESSORS ...]
+                        Example: --compressors Float,LinQuantization Log,Round
+  --vars VARS [VARS ...]
+                        Variables to process, otherwise all
+  --subset SUBSET [SUBSET ...]
+                        Variables to subset, e.g. --subset level=0-5
+```
 
 ## How to contribute
 

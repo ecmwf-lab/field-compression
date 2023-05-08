@@ -12,7 +12,7 @@ from typing import Optional, Tuple
 
 import numpy as np
 
-from .julia import BitInformation
+from .utils import compute_min_bits, get_bits_params
 
 
 class Compressor(metaclass=ABCMeta):
@@ -140,46 +140,15 @@ class Round(Compressor):
     """Rounding compressor."""
 
     def get_used_sign_and_exponent_bits(self, arr: np.ndarray) -> int:
-        arr = np.random.uniform(np.nanmin(arr), np.nanmax(arr), 1000).astype(arr.dtype)
 
-        if arr.dtype == np.float32:
-            dtype_int = np.uint32
-            width = 32
-            sign_and_exponent_bits = 9
-        elif arr.dtype == np.float64:
-            dtype_int = np.uint64
-            width = 64
-            sign_and_exponent_bits = 12
-        else:
-            raise RuntimeError("unsupported dtype")
+        bits_params = get_bits_params(arr)
+        used_sign_and_exponent_bits = compute_min_bits(arr, bits_params)
 
-        def to_bits(a):
-            l = []
-            for i in a:
-                l.append(
-                    np.array(
-                        list(np.binary_repr(int(i.view(dtype=dtype_int)), width=width)),
-                        dtype=dtype_int,
-                    )
-                )
-            l = np.vstack(l)
-
-            l2 = []
-            for i in range(l.shape[1]):
-                l2.append(l[:, i])
-
-            return np.array(l2)
-
-        bits_arr = to_bits(arr)
-
-        used_sign_and_exponent_bits = 0
-        for col in range(sign_and_exponent_bits):
-            if all(bits_arr[col, :] == 0) or all(bits_arr[col, :] == 1):
-                continue
-            used_sign_and_exponent_bits += 1
         return used_sign_and_exponent_bits
 
     def do_compress(self, arr: np.ndarray, bits: int) -> Tuple[np.ndarray, dict]:
+        from .julia import BitInformation
+
         used_sign_and_exponent_bits = self.get_used_sign_and_exponent_bits(arr)
         mantissa_bits = bits - used_sign_and_exponent_bits
         if mantissa_bits < 1:
@@ -207,7 +176,7 @@ class Log(Compressor):
     """Log/Exp compressor, typically used for pre-/postprocessing."""
 
     def do_compress(self, arr: np.ndarray, bits: int) -> Tuple[np.ndarray, dict]:
-        return np.log(arr), {}
+        return np.log1p(arr), {}
 
     def do_decompress(self, compressed_data: np.ndarray, params: dict) -> np.ndarray:
-        return np.exp(compressed_data)
+        return np.expm1(compressed_data)

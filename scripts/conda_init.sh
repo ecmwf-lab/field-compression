@@ -32,8 +32,22 @@ julia --project=. -e 'import Pkg; Pkg.instantiate()'
 
 echo "Downloading sample data..."
 mkdir -p data && cd data
-[ -e "cams_q_20191201_v3.nc" ] && echo "cams_q_20191201_v3.nc already exists. Skipping..." || \
-    curl -O https://files.codeocean.com/files/verified/e78744f2-1827-4eeb-95b3-dd5e828e9a71_v1.0/data/cams_q_20191201_v3.nc
-[ -e "ensemble.t.member1.step0.ll.nc" ] && echo "ensemble.t.member1.step0.ll.nc already exists. Skipping..." || \
-    curl -O https://files.codeocean.com/files/verified/e78744f2-1827-4eeb-95b3-dd5e828e9a71_v1.0/data/ensemble.t.member1.step0.ll.nc
 
+download_data () {
+    fname="$1"
+    if [ $fname == mars.grib ]; then
+        url="https://raw.githubusercontent.com/ecmwf-lab/field-compression/data/mars.grib"
+    else
+        url="https://files.codeocean.com/files/verified/e78744f2-1827-4eeb-95b3-dd5e828e9a71_v1.0/data/${fname}"
+    fi
+
+    [ -e "${fname}" ] && echo "${fname} already exists. Skipping..." || \
+    curl -O $url
+}
+
+for fname in mars.grib cams_ch4_20191201_v3.nc cams_co_20191201_v3.nc cams_co2_20191201_v3.nc \
+             cams_go3_20191201_v3.nc cams_no2_20191201_v3.nc cams_q_20191201_v3.nc \
+             cams_so2_20191201_v3.nc ensemble.t.member1.step0.ll.nc
+do
+    download_data $fname
+done

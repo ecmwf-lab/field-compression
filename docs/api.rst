@@ -40,3 +40,10 @@ Metrics
     :members: Difference, RelativeError, AbsoluteError
     :show-inheritance:
 
+Information Metrics
+=======
+
+.. automodule:: fcpy
+    :members: compute_sigmas, compute_knees_field, sigmas_iterate_da, sigmas_iterate_ds
+    :show-inheritance:
+

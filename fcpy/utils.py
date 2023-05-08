@@ -12,6 +12,7 @@ from typing import Optional
 
 import climetlab as cml
 import eccodes as ecc
+import numpy as np
 import xarray as xr
 
 
@@ -79,7 +80,10 @@ def regrid(
                 assert len(list(ds_regridded)) == 1
                 da_regridded = ds_regridded[list(ds_regridded)[0]]
 
-        da_regridded.attrs = {}
+        da_regridded.attrs = {
+            "long_name": source.attrs["long_name"],
+            "units": source.attrs["units"],
+        }
         da_regridded.name = source.name
 
     return da_regridded
@@ -103,3 +107,58 @@ def get_standard_name_dims(ds: xr.Dataset) -> dict:
         for c in [ds[dim] for dim in ds.dims]
         if "standard_name" in c.attrs
     }
+
+
+def compute_z_score(da: xr.DataArray) -> xr.DataArray:
+    """Normalize array to [0,1]"""
+    return (da - da.min()) / (da.max() - da.min())
+
+
+def get_bits_params(da: xr.DataArray) -> dict:
+    if da.dtype == np.float32:
+        dtype_int = np.uint32
+        width = 32
+        sign_and_exponent_bits = 9
+    elif da.dtype == np.float64:
+        dtype_int = np.uint64
+        width = 64
+        sign_and_exponent_bits = 12
+    else:
+        raise RuntimeError("unsupported dtype")
+    return dict(
+        dtype_int=dtype_int, width=width, sign_and_exponent_bits=sign_and_exponent_bits
+    )
+
+
+def to_bits(da, bits_params):
+    value_range = np.linspace(da.min(), da.max(), 10000).astype(da.dtype)
+    l = []
+    for i in value_range:
+        l.append(
+            np.array(
+                list(
+                    np.binary_repr(
+                        int(i.view(dtype=bits_params["dtype_int"])),
+                        width=bits_params["width"],
+                    )
+                ),
+                dtype=bits_params["dtype_int"],
+            )
+        )
+    l = np.vstack(l)
+    l2 = []
+    for i in range(l.shape[1]):
+        l2.append(l[:, i])
+
+    return np.array(l2)
+
+
+def compute_min_bits(da, bits_params):
+
+    bits_arr = to_bits(da, bits_params)
+    used_sign_and_exponent_bits = 0
+    for col in range(bits_params["sign_and_exponent_bits"]):
+        if all(bits_arr[col, :] == 0) or all(bits_arr[col, :] == 1):
+            continue
+        used_sign_and_exponent_bits += 1
+    return used_sign_and_exponent_bits

@@ -7,8 +7,15 @@
 # nor does it submit to any jurisdiction.
 #
 
+# Note: metview has to be imported first to avoid loading errors.
+try:
+    import metview
+except:
+    pass
+
 from .compressors import *  # noqa
 from .datasets import *  # noqa
 from .metrics import *  # noqa
+from .sigma import *  # noqa
 from .suite import *  # noqa
 from .utils import *  # noqa
